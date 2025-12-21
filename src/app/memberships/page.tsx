@@ -20,14 +20,14 @@ import {
 } from '@/components/ui/dialog';
 import { membershipPlans } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Hourglass, CalendarDays, CalendarMonth } from 'lucide-react';
+import { Hourglass, CalendarDays, Calendar } from 'lucide-react';
 import { ShredTrackLogo } from '@/components/icons';
 import Link from 'next/link';
 
 const planIcons = {
   Hourly: <Hourglass className="h-8 w-8 text-primary" />,
   Weekly: <CalendarDays className="h-8 w-8 text-primary" />,
-  Monthly: <CalendarMonth className="h-8 w-8 text-primary" />,
+  Monthly: <Calendar className="h-8 w-8 text-primary" />,
 };
 
 const qrCodeImage = PlaceHolderImages.find(img => img.id === 'qr-code');
