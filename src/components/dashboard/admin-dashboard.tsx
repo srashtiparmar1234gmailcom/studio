@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Users,
   Award,
@@ -35,21 +37,26 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { users, userMemberships, membershipPlans, attendance } from '@/lib/data';
 import { AiAnalysisCard } from './ai-analysis-card';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { useEffect, useState } from 'react';
 
 export default function AdminDashboard() {
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
   const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
   const expiredMemberships = userMemberships.length - activeMemberships;
 
-  const chartData = [
-    { name: "Jan", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "Feb", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "Mar", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "Apr", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "May", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "Jun", total: Math.floor(Math.random() * 2000) + 500 },
-    { name: "Jul", total: todaysAttendance * 25 },
-  ]
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  useEffect(() => {
+    setChartData([
+      { name: "Jan", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "Feb", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "Mar", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "Apr", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "May", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "Jun", total: Math.floor(Math.random() * 2000) + 500 },
+      { name: "Jul", total: todaysAttendance * 25 },
+    ]);
+  }, [todaysAttendance]);
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
@@ -206,3 +213,5 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+    
