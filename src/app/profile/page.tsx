@@ -1,14 +1,27 @@
+'use client';
+
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { getMockUser, userMemberships, attendance, membershipPlans } from '@/lib/data';
-import { User, Edit, Mail, Phone } from 'lucide-react';
+import { User, Edit, Mail, Phone, Lock } from 'lucide-react';
 import { ShredTrackLogo } from '@/components/icons';
+import { useEffect, useState } from 'react';
+import type { User as UserType } from '@/lib/types';
 
 export default function ProfilePage() {
-  const user = getMockUser('customer');
+  const [user, setUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    setUser(getMockUser('customer'));
+  }, []);
+
+  if (!user) {
+    return null; // Or a loading spinner
+  }
+
   const userMembershipHistory = userMemberships.filter(m => m.userId === user.id);
   const userAttendanceHistory = attendance.filter(a => a.userId === user.id);
 
@@ -32,9 +45,10 @@ export default function ProfilePage() {
               </Avatar>
               <div>
                 <h1 className="text-3xl font-bold font-headline">{user.name}</h1>
-                <div className="flex items-center space-x-4 text-muted-foreground mt-2">
+                <div className="flex flex-col space-y-2 text-muted-foreground mt-2">
                   <div className="flex items-center gap-2"><Mail className="h-4 w-4" /><span>{user.email}</span></div>
                   <div className="flex items-center gap-2"><Phone className="h-4 w-4" /><span>{user.phone}</span></div>
+                   <div className="flex items-center gap-2"><Lock className="h-4 w-4" /><span>{user.password}</span></div>
                 </div>
               </div>
             </div>

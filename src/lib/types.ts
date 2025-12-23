@@ -5,6 +5,7 @@ export interface User {
   phone: string;
   role: 'admin' | 'customer';
   avatarUrl: string;
+  password?: string;
 }
 
 export interface MembershipPlan {

@@ -1,7 +1,7 @@
 import type { User, MembershipPlan, UserMembership, Attendance } from './types';
 
 export const users: User[] = [
-  { id: 'usr_3', name: 'Harsh Rajput', email: 'srashtiparmar1234@gmail.com', phone: '1234567890', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40' },
+  { id: 'usr_3', name: 'Harsh Rajput', email: 'srashtiparmar1234@gmail.com', phone: '1234567890', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40', password: 'harshgaurav' },
 ];
 
 export const membershipPlans: MembershipPlan[] = [
@@ -24,8 +24,15 @@ export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
   if(loggedInUserEmail && users.find(u => u.email === loggedInUserEmail && u.role === 'customer')) {
     return users.find(u => u.email === loggedInUserEmail)!;
   }
+  
+  if (loggedInUserEmail) {
+    const userDetails = localStorage.getItem('userDetails');
+    if (userDetails) {
+      return JSON.parse(userDetails);
+    }
+  }
+
   // Return a default customer if no specific one is found, or create a fallback.
-  // For now, we will return a default mock user if no customer exists.
   // This part may need adjustment based on desired behavior when no customers are available.
   return users.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40' };
 };

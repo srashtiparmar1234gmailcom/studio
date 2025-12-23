@@ -16,14 +16,30 @@ import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const router = useRouter();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd create a user here.
-    // For now, just simulate and redirect.
+    const newUser = {
+      id: `usr_${new Date().getTime()}`,
+      name,
+      email,
+      phone,
+      password,
+      role: 'customer',
+      avatarUrl: `https://picsum.photos/seed/${email}/40/40`
+    };
+
     localStorage.setItem('userRole', 'customer');
     localStorage.setItem('loggedInUser', email);
+    localStorage.setItem('userDetails', JSON.stringify(newUser));
+    
+    // In a real app, you'd save this to a database
+    // For now, we are just storing in local storage for profile page to access
+    
     router.push('/memberships');
   };
 
@@ -40,7 +56,7 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full name</Label>
-              <Input id="full-name" placeholder="Tony Hawk" required />
+              <Input id="full-name" placeholder="Tony Hawk" required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -55,11 +71,11 @@ export default function SignupPage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" placeholder="123-456-7890" required />
+              <Input id="phone" placeholder="123-456-7890" required value={phone} onChange={(e) => setPhone(e.target.value)}/>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
             <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
               Create an account
