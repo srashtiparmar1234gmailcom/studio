@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 import AdminDashboard from './dashboard/admin-dashboard';
 import UserDashboard from './dashboard/user-dashboard';
@@ -128,6 +128,9 @@ export default function Dashboard() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
+              <SheetHeader className='sr-only'>
+                <SheetTitle>Navigation Menu</SheetTitle>
+              </SheetHeader>
               {sidebarContent}
             </SheetContent>
           </Sheet>
