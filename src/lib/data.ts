@@ -3,7 +3,7 @@ import type { User, MembershipPlan, UserMembership, Attendance } from './types';
 export const users: User[] = [
   { id: 'usr_1', name: 'Tony Hawk', email: 'tony@skate.com', phone: '123-456-7890', role: 'customer', avatarUrl: 'https://picsum.photos/seed/1/40/40' },
   { id: 'usr_2', name: 'Leticia Bufoni', email: 'leticia@skate.com', phone: '234-567-8901', role: 'customer', avatarUrl: 'https://picsum.photos/seed/2/40/40' },
-  { id: 'usr_3', name: 'Admin User', email: 'admin@shredtrack.com', phone: '999-999-9999', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40' },
+  { id: 'usr_3', name: 'Harsh Rajput', email: 'srashtiparmar1234@gmail.com', phone: '1234567890', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40' },
   { id: 'usr_4', name: 'Bob Burnquist', email: 'bob@skate.com', phone: '345-678-9012', role: 'customer', avatarUrl: 'https://picsum.photos/seed/4/40/40' },
   { id: 'usr_5', name: 'Elissa Steamer', email: 'elissa@skate.com', phone: '456-789-0123', role: 'customer', avatarUrl: 'https://picsum.photos/seed/5/40/40' },
   { id: 'usr_6', name: 'Nyjah Huston', email: 'nyjah@skate.com', phone: '567-890-1234', role: 'customer', avatarUrl: 'https://picsum.photos/seed/6/40/40' },
@@ -40,6 +40,10 @@ export const attendance: Attendance[] = [
 export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
   if (role === 'admin') {
     return users.find(u => u.role === 'admin')!;
+  }
+  const loggedInUserEmail = typeof window !== 'undefined' ? localStorage.getItem('loggedInUser') : null;
+  if(loggedInUserEmail && users.find(u => u.email === loggedInUserEmail && u.role === 'customer')) {
+    return users.find(u => u.email === loggedInUserEmail)!;
   }
   return users.find(u => u.role === 'customer')!;
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Bell,
@@ -31,8 +31,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 import AdminDashboard from './dashboard/admin-dashboard';
 import UserDashboard from './dashboard/user-dashboard';
@@ -40,10 +38,26 @@ import { ShredTrackLogo } from './icons';
 import { getMockUser } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [role, setRole] = useState<'admin' | 'customer'>('admin');
+  const [role, setRole] = useState<'admin' | 'customer' | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const userRole = localStorage.getItem('userRole') as 'admin' | 'customer' | null;
+    if (userRole) {
+      setRole(userRole);
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
+  if (!role) {
+    return null; // Or a loading spinner
+  }
+
   const user = getMockUser(role);
 
   const navItems = role === 'admin'
@@ -59,6 +73,12 @@ export default function Dashboard() {
         { href: '/memberships', icon: CreditCard, label: 'Memberships' },
         { href: '/profile', icon: User, label: 'Profile' },
       ];
+
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('loggedInUser');
+    router.push('/login');
+  };
 
   const NavLink = ({ item, isCollapsed }: { item: typeof navItems[0], isCollapsed: boolean }) => (
     <TooltipProvider delayDuration={0}>
@@ -94,18 +114,6 @@ export default function Dashboard() {
         </nav>
       </div>
       <div className="mt-auto p-4">
-        {!isCollapsed && (
-          <div className="flex items-center justify-center space-x-2 my-4">
-            <Label htmlFor="role-switch" className={cn(role === 'customer' && "text-primary")}>User</Label>
-            <Switch
-              id="role-switch"
-              checked={role === 'admin'}
-              onCheckedChange={(checked) => setRole(checked ? 'admin' : 'customer')}
-              aria-label="Toggle admin mode"
-            />
-            <Label htmlFor="role-switch" className={cn(role === 'admin' && "text-primary")}>Admin</Label>
-          </div>
-        )}
         <nav className={cn("grid items-start px-2 text-sm font-medium lg:px-4", isCollapsed && "px-1")}>
             <NavLink item={{ href: '#', icon: Settings, label: 'Settings' }} isCollapsed={isCollapsed} />
             <NavLink item={{ href: '#', icon: LifeBuoy, label: 'Support' }} isCollapsed={isCollapsed} />
@@ -177,8 +185,8 @@ export default function Dashboard() {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/login"><LogOut className="mr-2 h-4 w-4" /><span>Log out</span></Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" /><span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
