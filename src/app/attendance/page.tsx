@@ -62,7 +62,7 @@ export default function AttendancePage() {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="rounded-md"
+                  className="rounded-md border"
                   modifiers={{
                     attended: attendedDays,
                   }}
