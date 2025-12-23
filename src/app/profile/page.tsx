@@ -65,8 +65,6 @@ export default function ProfilePage() {
     return null; // Or a loading spinner
   }
 
-  const userMembershipHistory = userMemberships.filter(m => m.userId === user.id);
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="p-4 border-b border-border flex justify-between items-center">
@@ -139,25 +137,9 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <Separator className="my-6" />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-xl font-semibold font-headline mb-4">Membership History</h2>
-                <div className="space-y-4">
-                  {userMembershipHistory.length > 0 ? userMembershipHistory.map(mem => {
-                    const plan = membershipPlans.find(p => p.id === mem.planId);
-                    return (
-                      <div key={mem.id} className="p-4 rounded-lg border bg-secondary/50">
-                        <p className="font-semibold text-primary">{plan?.name} Plan</p>
-                        <p className="text-sm text-muted-foreground">Purchased on: {new Date(mem.startDate).toLocaleDateString()}</p>
-                        <p className="text-sm">Days Used: {mem.daysUsed}/{mem.totalDays}</p>
-                      </div>
-                    );
-                  }) : <p className="text-muted-foreground">No membership history found.</p>}
-                </div>
-              </div>
-              <div>
-                 <AttendanceCalendar attendedDays={userAttendance} />
+            <div className="flex justify-center">
+              <div className="w-full max-w-md">
+                <AttendanceCalendar attendedDays={userAttendance} />
               </div>
             </div>
           </CardContent>
