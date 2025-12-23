@@ -7,7 +7,6 @@ import {
   Home,
   Users,
   CalendarCheck,
-  BarChart3,
   CreditCard,
   LogOut,
   User,
@@ -60,9 +59,8 @@ export default function Dashboard() {
   const navItems = role === 'admin'
     ? [
         { href: '/', icon: Home, label: 'Dashboard' },
-        { href: '#', icon: Users, label: 'Users' },
+        { href: '/users', icon: Users, label: 'Users' },
         { href: '/attendance', icon: CalendarCheck, label: 'Attendance' },
-        { href: '#', icon: BarChart3, label: 'Reports' },
         { href: '/memberships', icon: CreditCard, label: 'Plans' },
       ]
     : [
