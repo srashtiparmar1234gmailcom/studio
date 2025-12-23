@@ -61,7 +61,7 @@ export default function Dashboard() {
     ? [
         { href: '/', icon: Home, label: 'Dashboard' },
         { href: '#', icon: Users, label: 'Users' },
-        { href: '#', icon: CalendarCheck, label: 'Attendance' },
+        { href: '/attendance', icon: CalendarCheck, label: 'Attendance' },
         { href: '#', icon: BarChart3, label: 'Reports' },
         { href: '/memberships', icon: CreditCard, label: 'Plans' },
       ]
