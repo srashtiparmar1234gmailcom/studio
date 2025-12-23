@@ -54,7 +54,6 @@ export default function AdminDashboard() {
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    // This now runs only on the client, preventing hydration errors.
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyAttendance = monthNames.map(month => ({ name: month, total: 0 }));
 
@@ -77,7 +76,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{allUsers.filter(u => u.role === 'customer').length}</div>
-            <p className="text-xs text-muted-foreground">+10.2% from last month</p>
           </CardContent>
         </Card>
         <Card>
@@ -87,7 +85,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeMemberships}</div>
-            <p className="text-xs text-muted-foreground">+5.1% from last month</p>
           </CardContent>
         </Card>
         <Card>
@@ -97,7 +94,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{todaysAttendance}</div>
-            <p className="text-xs text-muted-foreground">+2 since yesterday</p>
           </CardContent>
         </Card>
         <Card>
@@ -107,7 +103,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{expiredMemberships}</div>
-            <p className="text-xs text-muted-foreground">3 this week</p>
           </CardContent>
         </Card>
       </div>
