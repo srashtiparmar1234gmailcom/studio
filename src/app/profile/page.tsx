@@ -5,6 +5,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getMockUser, userMemberships, attendance, membershipPlans } from '@/lib/data';
 import { User, Edit, Mail, Phone, Lock } from 'lucide-react';
 import { ShredTrackLogo } from '@/components/icons';
@@ -13,10 +25,25 @@ import type { User as UserType } from '@/lib/types';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserType | null>(null);
+  const [name, setName] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    setUser(getMockUser('customer'));
+    const userData = getMockUser('customer');
+    setUser(userData);
+    if (userData) {
+      setName(userData.name);
+    }
   }, []);
+
+  const handleSaveChanges = () => {
+    if (user) {
+      const updatedUser = { ...user, name };
+      setUser(updatedUser);
+      localStorage.setItem('userDetails', JSON.stringify(updatedUser));
+      setIsDialogOpen(false);
+    }
+  };
 
   if (!user) {
     return null; // Or a loading spinner
@@ -52,10 +79,48 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="icon" className="absolute top-6 right-6">
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Edit Profile</span>
-            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="absolute top-6 right-6">
+                  <Edit className="h-4 w-4" />
+                  <span className="sr-only">Edit Profile</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Profile</DialogTitle>
+                  <DialogDescription>
+                    Make changes to your profile here. Click save when you're done.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">
+                      Name
+                    </Label>
+                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Email</Label>
+                    <p className="col-span-3 text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                   <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Phone</Label>
+                    <p className="col-span-3 text-sm text-muted-foreground">{user.phone}</p>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Password</Label>
+                    <p className="col-span-3 text-sm text-muted-foreground">{user.password}</p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button onClick={handleSaveChanges}>Save Changes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
           <CardContent>
             <Separator className="my-6" />
