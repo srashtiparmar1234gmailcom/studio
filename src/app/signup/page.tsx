@@ -62,7 +62,8 @@ export default function SignupPage() {
       phone,
       password,
       role: 'customer' as const,
-      avatarUrl: `https://picsum.photos/seed/${email}/40/40`
+      avatarUrl: `https://picsum.photos/seed/${email}/40/40`,
+      createdAt: new Date(),
     };
 
     const updatedUsers = [...allUsers, newUser];

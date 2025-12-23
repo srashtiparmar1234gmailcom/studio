@@ -4,9 +4,12 @@ import {
   Users,
   Award,
   CalendarCheck,
-  CalendarX,
   MoreHorizontal,
   PlusCircle,
+  User as UserIcon,
+  Mail,
+  KeyRound,
+  CalendarPlus,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,8 +67,10 @@ export default function AdminDashboard() {
   const [userMemberships, setUserMemberships] = useState<UserMembership[]>([]);
   
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -137,14 +142,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleOpenUserDetails = (user: User) => {
+    setViewingUser(user);
+    setIsDetailsDialogOpen(true);
+  };
+
 
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
   const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
-  const expiredMemberships = userMemberships.length - activeMemberships;
 
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
+    if (attendance.length === 0) {
+      setChartData([]);
+      return;
+    }
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyAttendance = monthNames.map(month => ({ name: month, total: 0 }));
 
@@ -159,7 +172,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -185,15 +198,6 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{todaysAttendance}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expired Memberships</CardTitle>
-            <CalendarX className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{expiredMemberships}</div>
           </CardContent>
         </Card>
       </div>
@@ -263,7 +267,7 @@ export default function AdminDashboard() {
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleMarkAttendance(user.id, user.name)}>Mark Attendance</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleOpenEditMembership(user)}>Edit Membership</DropdownMenuItem>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenUserDetails(user)}>View Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -281,6 +285,7 @@ export default function AdminDashboard() {
                     <CardDescription>An overview of user attendance this year.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {chartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={chartData}>
                         <XAxis
@@ -300,6 +305,12 @@ export default function AdminDashboard() {
                         <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                        No attendance data available.
+                      </div>
+                    )
+                  }
                 </CardContent>
             </Card>
         </div>
@@ -334,6 +345,39 @@ export default function AdminDashboard() {
               <Button variant="outline">Cancel</Button>
             </DialogClose>
             <Button onClick={handleAssignMembership}>Assign Plan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {viewingUser && (
+            <div className="grid gap-4 py-4 text-sm">
+                <div className="flex items-center gap-3">
+                    <UserIcon className="h-5 w-5 text-muted-foreground" />
+                    <div className="font-semibold">{viewingUser.name}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
+                    <div>{viewingUser.email}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <KeyRound className="h-5 w-5 text-muted-foreground" />
+                    <div>{viewingUser.password}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <CalendarPlus className="h-5 w-5 text-muted-foreground" />
+                    <div>Joined on {new Date(viewingUser.createdAt).toLocaleDateString()}</div>
+                </div>
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>

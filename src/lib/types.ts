@@ -6,6 +6,7 @@ export interface User {
   role: 'admin' | 'customer';
   avatarUrl: string;
   password?: string;
+  createdAt: Date;
 }
 
 export interface MembershipPlan {

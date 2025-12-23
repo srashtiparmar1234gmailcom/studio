@@ -1,7 +1,7 @@
 import type { User, MembershipPlan, UserMembership, Attendance } from './types';
 
 export const users: User[] = [
-  { id: 'usr_3', name: 'Harsh Rajput', email: 'srashtiparmar1234@gmail.com', phone: '1234567890', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40', password: 'harshgaurav' },
+  { id: 'usr_3', name: 'Harsh Rajput', email: 'srashtiparmar1234@gmail.com', phone: '1234567890', role: 'admin', avatarUrl: 'https://picsum.photos/seed/admin/40/40', password: 'harshgaurav', createdAt: new Date() },
 ];
 
 export const membershipPlans: MembershipPlan[] = [
@@ -22,7 +22,7 @@ export const getAllUsers = (): User[] => {
   const storedUsers = localStorage.getItem('users');
   if (storedUsers) {
     try {
-      const parsedUsers = JSON.parse(storedUsers);
+      const parsedUsers = JSON.parse(storedUsers).map((u: any) => ({ ...u, createdAt: new Date(u.createdAt) }));
       // Ensure it's an array, if not, reset it.
       if (Array.isArray(parsedUsers)) {
         // Check if admin user exists, if not, add it.
@@ -61,7 +61,7 @@ export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
   if (role === 'customer' && customerUser) return customerUser;
 
   // Final fallback to a guest user if no other user is found
-  return { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '' };
+  return { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '', createdAt: new Date() };
 };
 
 // Function to add attendance and save to localStorage
