@@ -23,7 +23,21 @@ export const getAllUsers = (): User[] => {
   }
   const storedUsers = localStorage.getItem('users');
   if (storedUsers) {
-    return JSON.parse(storedUsers);
+    try {
+      const parsedUsers = JSON.parse(storedUsers);
+      // Ensure it's an array, if not, reset it.
+      if (Array.isArray(parsedUsers)) {
+        // Check if admin user exists, if not, add it.
+        if (!parsedUsers.some(u => u.role === 'admin')) {
+          const resetUsers = [...users, ...parsedUsers.filter(u => u.role !== 'admin')];
+          localStorage.setItem('users', JSON.stringify(resetUsers));
+          return resetUsers;
+        }
+        return parsedUsers;
+      }
+    } catch (e) {
+        // If parsing fails, reset to default
+    }
   }
   localStorage.setItem('users', JSON.stringify(users));
   return users;
@@ -43,5 +57,5 @@ export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
   }
   
   // Fallback for customer if not found
-  return allUsers.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40' };
+  return allUsers.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '' };
 };
