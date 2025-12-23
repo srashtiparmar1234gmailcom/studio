@@ -35,7 +35,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { getAllUsers, userMemberships, membershipPlans, attendance } from '@/lib/data';
-import { AiAnalysisCard } from './ai-analysis-card';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { useEffect, useState } from 'react';
 import type { User } from '@/lib/types';
@@ -211,11 +210,8 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                 </CardContent>
             </Card>
-            <AiAnalysisCard />
         </div>
       </div>
     </div>
   );
 }
-
-    
