@@ -10,11 +10,9 @@ export const membershipPlans: MembershipPlan[] = [
   { id: 'plan_3', name: 'Monthly', price: 350, validityDays: 30, type: 'Monthly' },
 ];
 
-export const userMemberships: UserMembership[] = [
-];
+export const userMemberships: UserMembership[] = [];
 
-export const attendance: Attendance[] = [
-];
+export const attendance: Attendance[] = [];
 
 // Helper to get all users, including those from localStorage
 export const getAllUsers = (): User[] => {
@@ -47,8 +45,10 @@ export const getAllUsers = (): User[] => {
 export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
   const allUsers = getAllUsers();
   if (role === 'admin') {
-    return allUsers.find(u => u.role === 'admin')!;
+    const adminUser = allUsers.find(u => u.role === 'admin');
+    if (adminUser) return adminUser;
   }
+  
   const loggedInUserEmail = typeof window !== 'undefined' ? localStorage.getItem('loggedInUser') : null;
 
   if (loggedInUserEmail) {
@@ -56,6 +56,10 @@ export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
       if (loggedInUser) return loggedInUser;
   }
   
-  // Fallback for customer if not found
-  return allUsers.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '' };
+  // Fallback for customer if not found or if role is customer but no specific user is logged in
+  const customerUser = allUsers.find(u => u.role === 'customer');
+  if (role === 'customer' && customerUser) return customerUser;
+
+  // Final fallback to a guest user if no other user is found
+  return { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '' };
 };
