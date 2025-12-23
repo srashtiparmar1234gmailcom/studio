@@ -7,6 +7,7 @@ import {
   Mail,
   KeyRound,
   CalendarPlus,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,9 +52,10 @@ import {
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 import { getAllUsers, getAllMemberships, membershipPlans, addAttendance, assignMembership } from '@/lib/data';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { User, Attendance, UserMembership } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
@@ -70,6 +72,7 @@ export default function UsersPage() {
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { toast } = useToast();
 
@@ -87,6 +90,13 @@ export default function UsersPage() {
   useEffect(() => {
     loadData();
   }, []);
+  
+  const filteredUsers = useMemo(() => {
+    return allUsers.filter(user => 
+      user.role === 'customer' &&
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [allUsers, searchQuery]);
 
   const handleMarkAttendance = (userId: string, userName: string) => {
     const today = new Date();
@@ -158,19 +168,32 @@ export default function UsersPage() {
         </header>
         <main className="container mx-auto px-4 py-12">
             <Card>
-                <CardHeader className="flex flex-row items-center">
-                    <div className="grid gap-2">
-                    <CardTitle>User Management</CardTitle>
-                    <CardDescription>
-                        Manage park members and their attendance.
-                    </CardDescription>
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="grid gap-2">
+                            <CardTitle>User Management</CardTitle>
+                            <CardDescription>
+                                Manage park members and their attendance.
+                            </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2">
+                             <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input 
+                                    placeholder="Search by email..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9"
+                                />
+                            </div>
+                            <Button asChild size="sm" className="gap-1 bg-accent hover:bg-accent/90">
+                            <a href="/signup">
+                                Add User
+                                <PlusCircle className="h-4 w-4" />
+                            </a>
+                            </Button>
+                        </div>
                     </div>
-                    <Button asChild size="sm" className="ml-auto gap-1 bg-accent hover:bg-accent/90">
-                    <a href="/signup">
-                        Add User
-                        <PlusCircle className="h-4 w-4" />
-                    </a>
-                    </Button>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -186,7 +209,7 @@ export default function UsersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {allUsers.filter(u => u.role === 'customer').map(user => {
+                        {filteredUsers.map(user => {
                         const membership = userMemberships.find(m => m.userId === user.id);
                         const plan = membership ? membershipPlans.find(p => p.id === membership.planId) : null;
                         const remainingDays = membership ? membership.totalDays - membership.daysUsed : 0;
@@ -200,7 +223,10 @@ export default function UsersPage() {
                                     <AvatarImage src={user.avatarUrl} alt={user.name} />
                                     <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
-                                <div className="font-medium">{user.name}</div>
+                                <div>
+                                    <div className="font-medium">{user.name}</div>
+                                    <div className="text-muted-foreground text-sm">{user.email}</div>
+                                </div>
                                 </div>
                             </TableCell>
                             <TableCell>{plan ? plan.name : 'N/A'}</TableCell>

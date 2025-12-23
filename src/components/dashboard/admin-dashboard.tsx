@@ -10,6 +10,7 @@ import {
   Mail,
   KeyRound,
   CalendarPlus,
+  Search,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,13 +55,15 @@ import {
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 import { getAllUsers, getAllMemberships, membershipPlans, addAttendance, assignMembership } from '@/lib/data';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { User, Attendance, UserMembership } from '@/lib/types';
 import { Label } from '../ui/label';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -76,7 +79,8 @@ export default function AdminDashboard() {
   const [listDialogOpen, setListDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState('');
   const [dialogUsers, setDialogUsers] = useState<User[]>([]);
-
+  
+  const router = useRouter();
   const { toast } = useToast();
 
   const loadData = () => {
@@ -155,22 +159,13 @@ export default function AdminDashboard() {
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0);
   const todaysAttendance = attendance.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
 
-  const handleOpenListDialog = (type: 'total' | 'active' | 'today') => {
-    const customerUsers = allUsers.filter(u => u.role === 'customer');
-    if (type === 'total') {
-      setDialogTitle('Total Users');
-      setDialogUsers(customerUsers);
-    } else if (type === 'active') {
-      setDialogTitle('Active Memberships');
-      const activeUserIds = new Set(activeMemberships.map(m => m.userId));
-      setDialogUsers(customerUsers.filter(u => activeUserIds.has(u.id)));
+  const handleCardClick = (type: 'total' | 'active' | 'today') => {
+    if (type === 'total' || type === 'active') {
+      router.push('/users');
     } else if (type === 'today') {
-      setDialogTitle("Today's Attendance");
-      const attendedUserIds = new Set(todaysAttendance.map(a => a.userId));
-      setDialogUsers(customerUsers.filter(u => attendedUserIds.has(u.id)));
+      router.push('/attendance');
     }
-    setListDialogOpen(true);
-  }
+  };
 
 
   const [chartData, setChartData] = useState<any[]>([]);
@@ -188,12 +183,19 @@ export default function AdminDashboard() {
 
     setChartData(monthlyAttendance);
   }, [attendance]);
+  
+  const recentUsers = useMemo(() => {
+    return allUsers
+      .filter(u => u.role === 'customer')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }, [allUsers]);
 
 
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('total')}>
+          <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handleCardClick('total')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -202,7 +204,7 @@ export default function AdminDashboard() {
               <div className="text-2xl font-bold">{allUsers.filter(u => u.role === 'customer').length}</div>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('active')}>
+          <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handleCardClick('active')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Memberships</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
@@ -211,7 +213,7 @@ export default function AdminDashboard() {
               <div className="text-2xl font-bold">{activeMemberships.length}</div>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('today')}>
+          <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handleCardClick('today')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
               <CalendarCheck className="h-4 w-4 text-muted-foreground" />
@@ -223,19 +225,11 @@ export default function AdminDashboard() {
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2">
-          <CardHeader className="flex flex-row items-center">
-            <div className="grid gap-2">
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>
-                Manage park members and their attendance.
-              </CardDescription>
-            </div>
-            <Button asChild size="sm" className="ml-auto gap-1 bg-accent hover:bg-accent/90">
-              <a href="/signup">
-                Add User
-                <PlusCircle className="h-4 w-4" />
-              </a>
-            </Button>
+          <CardHeader>
+            <CardTitle>Recent Users</CardTitle>
+            <CardDescription>
+              The latest members to join the park.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -244,14 +238,13 @@ export default function AdminDashboard() {
                   <TableHead>Customer</TableHead>
                   <TableHead>Membership</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Remaining Days</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allUsers.filter(u => u.role === 'customer').map(user => {
+                {recentUsers.map(user => {
                   const membership = userMemberships.find(m => m.userId === user.id);
                   const plan = membership ? membershipPlans.find(p => p.id === membership.planId) : null;
                   const remainingDays = membership ? membership.totalDays - membership.daysUsed : 0;
@@ -265,7 +258,10 @@ export default function AdminDashboard() {
                             <AvatarImage src={user.avatarUrl} alt={user.name} />
                             <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <div className="font-medium">{user.name}</div>
+                          <div>
+                            <div className="font-medium">{user.name}</div>
+                            <div className="text-sm text-muted-foreground">{user.email}</div>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{plan ? plan.name : 'N/A'}</TableCell>
@@ -274,7 +270,6 @@ export default function AdminDashboard() {
                           {status}
                         </Badge>
                       </TableCell>
-                      <TableCell>{remainingDays}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
