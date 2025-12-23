@@ -15,6 +15,8 @@ import { Button } from '../ui/button';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { User, UserMembership, Attendance } from '@/lib/types';
+import { ScrollArea } from '../ui/scroll-area';
+import { Badge } from '../ui/badge';
 
 
 export default function UserDashboard() {
@@ -33,7 +35,7 @@ export default function UserDashboard() {
     const storedAttendance = localStorage.getItem('attendance');
     const allAttendance: Attendance[] = storedAttendance ? JSON.parse(storedAttendance).map((a:any) => ({...a, date: new Date(a.date)})) : initialAttendance;
     const currentUserAttendance = allAttendance.filter(a => a.userId === currentUser.id).map(a => a.date);
-    setUserAttendance(currentUserAttendance);
+    setUserAttendance(currentUserAttendance.sort((a, b) => b.getTime() - a.getTime()));
   }, []);
 
   if (!user) {
@@ -91,7 +93,33 @@ export default function UserDashboard() {
           </CardFooter>
         </Card>
       </div>
-      <AttendanceCalendar attendedDays={userAttendance} />
+      <div className="grid gap-4 md:gap-8 md:grid-cols-2">
+        <AttendanceCalendar attendedDays={userAttendance} />
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline">History</CardTitle>
+            <CardDescription>Your past attendance records.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {userAttendance.length > 0 ? (
+              <ScrollArea className="h-72">
+                <div className="space-y-4">
+                  {userAttendance.map((date, index) => (
+                    <div key={index} className="flex items-center justify-between rounded-md bg-secondary/30 p-3">
+                      <p className="font-medium">{date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      <Badge variant="default" className="bg-primary/80 text-primary-foreground">Present</Badge>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="flex h-72 items-center justify-center rounded-md border border-dashed">
+                <p className="text-muted-foreground">This is Your 1st time.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
