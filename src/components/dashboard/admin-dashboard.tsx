@@ -55,16 +55,16 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // This now runs only on the client, preventing hydration errors.
-    setChartData([
-      { name: "Jan", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "Feb", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "Mar", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "Apr", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "May", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "Jun", total: Math.floor(Math.random() * 2000) + 500 },
-      { name: "Jul", total: todaysAttendance * 25 },
-    ]);
-  }, [todaysAttendance]);
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlyAttendance = monthNames.map(month => ({ name: month, total: 0 }));
+
+    attendance.forEach(att => {
+        const monthIndex = att.date.getMonth();
+        monthlyAttendance[monthIndex].total += 1;
+    });
+
+    setChartData(monthlyAttendance);
+  }, []);
 
 
   return (
