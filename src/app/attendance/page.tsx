@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +12,12 @@ import type { User } from '@/lib/types';
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [isClient, setIsClient] = useState(false);
   const allUsers = useMemo(() => getAllUsers(), []);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const attendedUsers = useMemo(() => {
     if (!selectedDate) return [];
@@ -73,7 +78,7 @@ export default function AttendancePage() {
             <Card>
               <CardHeader>
                 <CardTitle className="font-headline">
-                  Attendance for {selectedDate ? selectedDate.toLocaleDateString() : '...'}
+                  Attendance for {isClient && selectedDate ? selectedDate.toLocaleDateString() : '...'}
                 </CardTitle>
                 <CardDescription>
                   {attendedUsers.length} {attendedUsers.length === 1 ? 'user' : 'users'} present.
