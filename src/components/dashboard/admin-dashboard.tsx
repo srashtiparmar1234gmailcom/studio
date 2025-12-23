@@ -155,17 +155,15 @@ export default function AdminDashboard() {
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    if (attendance.length === 0) {
-      setChartData([]);
-      return;
-    }
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const monthlyAttendance = monthNames.map(month => ({ name: month, total: 0 }));
 
-    attendance.forEach(att => {
-        const monthIndex = new Date(att.date).getMonth();
-        monthlyAttendance[monthIndex].total += 1;
-    });
+    if (attendance && attendance.length > 0) {
+      attendance.forEach(att => {
+          const monthIndex = new Date(att.date).getMonth();
+          monthlyAttendance[monthIndex].total += 1;
+      });
+    }
 
     setChartData(monthlyAttendance);
   }, [attendance]);
@@ -185,24 +183,28 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Memberships</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeMemberships}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todaysAttendance}</div>
-          </CardContent>
-        </Card>
+        <Link href="/users">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Memberships</CardTitle>
+              <Award className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{activeMemberships}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/attendance">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
+              <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todaysAttendance}</div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2">
