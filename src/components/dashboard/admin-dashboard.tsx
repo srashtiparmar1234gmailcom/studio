@@ -33,18 +33,55 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
 
-import { getAllUsers, userMemberships, membershipPlans, attendance } from '@/lib/data';
+import { getAllUsers, userMemberships, membershipPlans, attendance as initialAttendance, addAttendance } from '@/lib/data';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { useEffect, useState } from 'react';
-import type { User } from '@/lib/types';
+import type { User, Attendance } from '@/lib/types';
 
 export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     setAllUsers(getAllUsers());
+    const storedAttendance = localStorage.getItem('attendance');
+    if (storedAttendance) {
+      // Dates are stored as strings, need to convert them back to Date objects
+      setAttendance(JSON.parse(storedAttendance).map((a: any) => ({...a, date: new Date(a.date)})));
+    } else {
+      setAttendance(initialAttendance);
+    }
   }, []);
+
+  const handleMarkAttendance = (userId: string, userName: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to the beginning of the day
+
+    // Prevent marking attendance twice on the same day for the same user
+    const hasAttendedToday = attendance.some(
+      a => a.userId === userId && new Date(a.date).toDateString() === today.toDateString()
+    );
+
+    if (hasAttendedToday) {
+      toast({
+        variant: 'destructive',
+        title: 'Attendance Already Marked',
+        description: `${userName} has already been marked as present today.`,
+      });
+      return;
+    }
+    
+    const newAttendanceRecord = addAttendance(userId);
+    setAttendance(prev => [...prev, newAttendanceRecord]);
+    
+    toast({
+      title: 'Attendance Marked',
+      description: `${userName} has been marked as present for today.`,
+    });
+  };
 
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
   const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
@@ -57,12 +94,12 @@ export default function AdminDashboard() {
     const monthlyAttendance = monthNames.map(month => ({ name: month, total: 0 }));
 
     attendance.forEach(att => {
-        const monthIndex = att.date.getMonth();
+        const monthIndex = new Date(att.date).getMonth();
         monthlyAttendance[monthIndex].total += 1;
     });
 
     setChartData(monthlyAttendance);
-  }, []);
+  }, [attendance]);
 
 
   return (
@@ -169,7 +206,7 @@ export default function AdminDashboard() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleMarkAttendance(user.id, user.name)}>Mark Attendance</DropdownMenuItem>
                             <DropdownMenuItem>Edit Membership</DropdownMenuItem>
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </DropdownMenuContent>

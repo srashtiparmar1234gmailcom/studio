@@ -10,9 +10,9 @@ export const membershipPlans: MembershipPlan[] = [
   { id: 'plan_3', name: 'Monthly', price: 350, validityDays: 30, type: 'Monthly' },
 ];
 
-export const userMemberships: UserMembership[] = [];
+export let userMemberships: UserMembership[] = [];
 
-export const attendance: Attendance[] = [];
+export let attendance: Attendance[] = [];
 
 // Helper to get all users, including those from localStorage
 export const getAllUsers = (): User[] => {
@@ -62,4 +62,32 @@ export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
 
   // Final fallback to a guest user if no other user is found
   return { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40', password: '' };
+};
+
+// Function to add attendance and save to localStorage
+export const addAttendance = (userId: string): Attendance => {
+  const newAttendance: Attendance = {
+    id: `att_${new Date().getTime()}`,
+    userId,
+    date: new Date(),
+  };
+
+  if (typeof window !== 'undefined') {
+    const storedAttendance = localStorage.getItem('attendance');
+    let currentAttendance: Attendance[] = [];
+    if (storedAttendance) {
+      try {
+        currentAttendance = JSON.parse(storedAttendance);
+      } catch (e) {
+        currentAttendance = [];
+      }
+    }
+    const updatedAttendance = [...currentAttendance, newAttendance];
+    localStorage.setItem('attendance', JSON.stringify(updatedAttendance));
+    attendance = updatedAttendance;
+  } else {
+    attendance.push(newAttendance);
+  }
+
+  return newAttendance;
 };

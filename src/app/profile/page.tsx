@@ -22,17 +22,25 @@ import { User, Edit, Mail, Phone, Lock } from 'lucide-react';
 import { ShredTrackLogo } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import type { User as UserType } from '@/lib/types';
+import { AttendanceCalendar } from '@/components/dashboard/attendance-calendar';
 
 export default function ProfilePage() {
   const [user, setUser] = useState<UserType | null>(null);
   const [name, setName] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userAttendance, setUserAttendance] = useState<Date[]>([]);
 
   useEffect(() => {
     const userData = getMockUser('customer');
     setUser(userData);
     if (userData) {
       setName(userData.name);
+      
+      // Load attendance from localStorage
+      const storedAttendance = localStorage.getItem('attendance');
+      const allAttendance = storedAttendance ? JSON.parse(storedAttendance).map((a:any) => ({...a, date: new Date(a.date)})) : attendance;
+      const userAttendanceHistory = allAttendance.filter((a: any) => a.userId === userData.id);
+      setUserAttendance(userAttendanceHistory.map((a: any) => a.date));
     }
   }, []);
 
@@ -58,7 +66,6 @@ export default function ProfilePage() {
   }
 
   const userMembershipHistory = userMemberships.filter(m => m.userId === user.id);
-  const userAttendanceHistory = attendance.filter(a => a.userId === user.id);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -142,7 +149,7 @@ export default function ProfilePage() {
                     return (
                       <div key={mem.id} className="p-4 rounded-lg border bg-secondary/50">
                         <p className="font-semibold text-primary">{plan?.name} Plan</p>
-                        <p className="text-sm text-muted-foreground">Purchased on: {mem.startDate.toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">Purchased on: {new Date(mem.startDate).toLocaleDateString()}</p>
                         <p className="text-sm">Days Used: {mem.daysUsed}/{mem.totalDays}</p>
                       </div>
                     );
@@ -150,15 +157,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <h2 className="text-xl font-semibold font-headline mb-4">Attendance History</h2>
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                   {userAttendanceHistory.length > 0 ? userAttendanceHistory.map(att => (
-                     <div key={att.id} className="flex justify-between items-center p-2 rounded-lg bg-secondary/50">
-                       <p>Visit Date:</p>
-                       <p className="font-mono text-primary">{att.date.toLocaleDateString()}</p>
-                     </div>
-                   )) : <p className="text-muted-foreground">No attendance history found.</p>}
-                </div>
+                 <AttendanceCalendar attendedDays={userAttendance} />
               </div>
             </div>
           </CardContent>
