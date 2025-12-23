@@ -72,6 +72,10 @@ export default function AdminDashboard() {
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  
+  const [listDialogOpen, setListDialogOpen] = useState(false);
+  const [dialogTitle, setDialogTitle] = useState('');
+  const [dialogUsers, setDialogUsers] = useState<User[]>([]);
 
   const { toast } = useToast();
 
@@ -147,10 +151,27 @@ export default function AdminDashboard() {
     setViewingUser(user);
     setIsDetailsDialogOpen(true);
   };
+  
+  const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0);
+  const todaysAttendance = attendance.filter(a => new Date(a.date).toDateString() === new Date().toDateString());
 
+  const handleOpenListDialog = (type: 'total' | 'active' | 'today') => {
+    const customerUsers = allUsers.filter(u => u.role === 'customer');
+    if (type === 'total') {
+      setDialogTitle('Total Users');
+      setDialogUsers(customerUsers);
+    } else if (type === 'active') {
+      setDialogTitle('Active Memberships');
+      const activeUserIds = new Set(activeMemberships.map(m => m.userId));
+      setDialogUsers(customerUsers.filter(u => activeUserIds.has(u.id)));
+    } else if (type === 'today') {
+      setDialogTitle("Today's Attendance");
+      const attendedUserIds = new Set(todaysAttendance.map(a => a.userId));
+      setDialogUsers(customerUsers.filter(u => attendedUserIds.has(u.id)));
+    }
+    setListDialogOpen(true);
+  }
 
-  const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
-  const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
 
   const [chartData, setChartData] = useState<any[]>([]);
 
@@ -172,8 +193,7 @@ export default function AdminDashboard() {
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-        <Link href="/users">
-          <Card>
+          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('total')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -182,29 +202,24 @@ export default function AdminDashboard() {
               <div className="text-2xl font-bold">{allUsers.filter(u => u.role === 'customer').length}</div>
             </CardContent>
           </Card>
-        </Link>
-        <Link href="/users">
-          <Card>
+          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('active')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Memberships</CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activeMemberships}</div>
+              <div className="text-2xl font-bold">{activeMemberships.length}</div>
             </CardContent>
           </Card>
-        </Link>
-        <Link href="/attendance">
-          <Card>
+          <Card className="cursor-pointer" onClick={() => handleOpenListDialog('today')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
               <CalendarCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{todaysAttendance}</div>
+              <div className="text-2xl font-bold">{todaysAttendance.length}</div>
             </CardContent>
           </Card>
-        </Link>
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="xl:col-span-2">
@@ -379,6 +394,53 @@ export default function AdminDashboard() {
                 </div>
             </div>
           )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button>Close</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={listDialogOpen} onOpenChange={setListDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{dialogTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Email</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dialogUsers.length > 0 ? (
+                  dialogUsers.map(user => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.avatarUrl} alt={user.name} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="font-medium">{user.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center">
+                      No users to display.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
           <DialogFooter>
             <DialogClose asChild>
               <Button>Close</Button>
