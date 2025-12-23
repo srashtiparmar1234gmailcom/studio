@@ -10,10 +10,8 @@ import {
   BarChart3,
   CreditCard,
   Settings,
-  LifeBuoy,
   LogOut,
   User,
-  PanelLeft,
   ChevronsLeft,
   ChevronsRight,
   Menu,
@@ -113,12 +111,7 @@ export default function Dashboard() {
           {navItems.map((item) => <NavLink key={item.label} item={item} isCollapsed={isCollapsed} />)}
         </nav>
       </div>
-      <div className="mt-auto p-4">
-        <nav className={cn("grid items-start px-2 text-sm font-medium lg:px-4", isCollapsed && "px-1")}>
-            <NavLink item={{ href: '#', icon: Settings, label: 'Settings' }} isCollapsed={isCollapsed} />
-            <NavLink item={{ href: '#', icon: LifeBuoy, label: 'Support' }} isCollapsed={isCollapsed} />
-        </nav>
-      </div>
+      
     </div>
   );
 
@@ -178,10 +171,6 @@ export default function Dashboard() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link href="/memberships"><CreditCard className="mr-2 h-4 w-4" /><span>Billing</span></Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
