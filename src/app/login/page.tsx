@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { getAllUsers } from '@/lib/data';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -23,16 +24,17 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'srashtiparmar1234@gmail.com' && password === 'harshgaurav') {
-      localStorage.setItem('userRole', 'admin');
+    const allUsers = getAllUsers();
+    const user = allUsers.find(u => u.email === email && u.password === password);
+
+    if (user) {
+      localStorage.setItem('userRole', user.role);
       localStorage.setItem('loggedInUser', email);
-      router.push('/');
-    } else if (email && password) {
-      // For any other user, we just check if fields are not empty for this mock setup
-      localStorage.setItem('userRole', 'customer');
-       // This could be improved to find a specific user, but for now we'll set a generic customer
-      localStorage.setItem('loggedInUser', email);
-      router.push('/memberships');
+      if (user.role === 'admin') {
+        router.push('/');
+      } else {
+        router.push('/memberships');
+      }
     } else {
       toast({
         variant: 'destructive',

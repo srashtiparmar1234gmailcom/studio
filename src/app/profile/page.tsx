@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getMockUser, userMemberships, attendance, membershipPlans } from '@/lib/data';
+import { getMockUser, userMemberships, attendance, membershipPlans, getAllUsers } from '@/lib/data';
 import { User, Edit, Mail, Phone, Lock } from 'lucide-react';
 import { ShredTrackLogo } from '@/components/icons';
 import { useEffect, useState } from 'react';
@@ -40,6 +40,14 @@ export default function ProfilePage() {
     if (user) {
       const updatedUser = { ...user, name };
       setUser(updatedUser);
+      
+      const allUsers = getAllUsers();
+      const userIndex = allUsers.findIndex(u => u.id === user.id);
+      if (userIndex !== -1) {
+        allUsers[userIndex] = updatedUser;
+        localStorage.setItem('users', JSON.stringify(allUsers));
+      }
+      
       localStorage.setItem('userDetails', JSON.stringify(updatedUser));
       setIsDialogOpen(false);
     }

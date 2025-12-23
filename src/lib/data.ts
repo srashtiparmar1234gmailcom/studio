@@ -16,23 +16,32 @@ export const userMemberships: UserMembership[] = [
 export const attendance: Attendance[] = [
 ];
 
+// Helper to get all users, including those from localStorage
+export const getAllUsers = (): User[] => {
+  if (typeof window === 'undefined') {
+    return users; // Return initial admin during SSR
+  }
+  const storedUsers = localStorage.getItem('users');
+  if (storedUsers) {
+    return JSON.parse(storedUsers);
+  }
+  localStorage.setItem('users', JSON.stringify(users));
+  return users;
+};
+
+
 export const getMockUser = (role: 'admin' | 'customer' = 'customer'): User => {
+  const allUsers = getAllUsers();
   if (role === 'admin') {
-    return users.find(u => u.role === 'admin')!;
+    return allUsers.find(u => u.role === 'admin')!;
   }
   const loggedInUserEmail = typeof window !== 'undefined' ? localStorage.getItem('loggedInUser') : null;
-  if(loggedInUserEmail && users.find(u => u.email === loggedInUserEmail && u.role === 'customer')) {
-    return users.find(u => u.email === loggedInUserEmail)!;
+
+  if (loggedInUserEmail) {
+      const loggedInUser = allUsers.find(u => u.email === loggedInUserEmail);
+      if (loggedInUser) return loggedInUser;
   }
   
-  if (loggedInUserEmail) {
-    const userDetails = localStorage.getItem('userDetails');
-    if (userDetails) {
-      return JSON.parse(userDetails);
-    }
-  }
-
-  // Return a default customer if no specific one is found, or create a fallback.
-  // This part may need adjustment based on desired behavior when no customers are available.
-  return users.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40' };
+  // Fallback for customer if not found
+  return allUsers.find(u => u.role === 'customer') ?? { id: 'usr_mock', name: 'Guest User', email: '', phone: '', role: 'customer', avatarUrl: 'https://picsum.photos/seed/guest/40/40' };
 };

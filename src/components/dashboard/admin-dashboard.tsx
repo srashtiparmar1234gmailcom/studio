@@ -34,12 +34,19 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-import { users, userMemberships, membershipPlans, attendance } from '@/lib/data';
+import { getAllUsers, userMemberships, membershipPlans, attendance } from '@/lib/data';
 import { AiAnalysisCard } from './ai-analysis-card';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { useEffect, useState } from 'react';
+import type { User } from '@/lib/types';
 
 export default function AdminDashboard() {
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    setAllUsers(getAllUsers());
+  }, []);
+
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
   const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
   const expiredMemberships = userMemberships.length - activeMemberships;
@@ -47,6 +54,7 @@ export default function AdminDashboard() {
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
+    // This now runs only on the client, preventing hydration errors.
     setChartData([
       { name: "Jan", total: Math.floor(Math.random() * 2000) + 500 },
       { name: "Feb", total: Math.floor(Math.random() * 2000) + 500 },
@@ -58,6 +66,7 @@ export default function AdminDashboard() {
     ]);
   }, [todaysAttendance]);
 
+
   return (
     <div className="grid flex-1 items-start gap-4 md:gap-8">
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -67,7 +76,7 @@ export default function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.filter(u => u.role === 'customer').length}</div>
+            <div className="text-2xl font-bold">{allUsers.filter(u => u.role === 'customer').length}</div>
             <p className="text-xs text-muted-foreground">+10.2% from last month</p>
           </CardContent>
         </Card>
@@ -132,7 +141,7 @@ export default function AdminDashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.filter(u => u.role === 'customer').map(user => {
+                {allUsers.filter(u => u.role === 'customer').map(user => {
                   const membership = userMemberships.find(m => m.userId === user.id);
                   const plan = membership ? membershipPlans.find(p => p.id === membership.planId) : null;
                   const remainingDays = membership ? membership.totalDays - membership.daysUsed : 0;

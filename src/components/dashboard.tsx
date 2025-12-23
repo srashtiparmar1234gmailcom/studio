@@ -9,7 +9,6 @@ import {
   CalendarCheck,
   BarChart3,
   CreditCard,
-  Settings,
   LogOut,
   User,
   ChevronsLeft,
@@ -75,6 +74,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('userRole');
     localStorage.removeItem('loggedInUser');
+    localStorage.removeItem('userDetails');
     router.push('/login');
   };
 

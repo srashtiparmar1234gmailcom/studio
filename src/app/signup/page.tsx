@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getAllUsers } from '@/lib/data';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -23,22 +24,28 @@ export default function SignupPage() {
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Get current users from localStorage or initial data
+    const allUsers = getAllUsers();
+
     const newUser = {
       id: `usr_${new Date().getTime()}`,
       name,
       email,
       phone,
       password,
-      role: 'customer',
+      role: 'customer' as const,
       avatarUrl: `https://picsum.photos/seed/${email}/40/40`
     };
 
+    // Add new user and save back to localStorage
+    const updatedUsers = [...allUsers, newUser];
+    localStorage.setItem('users', JSON.stringify(updatedUsers));
+    
+    // Set session info for the new user
     localStorage.setItem('userRole', 'customer');
     localStorage.setItem('loggedInUser', email);
     localStorage.setItem('userDetails', JSON.stringify(newUser));
-    
-    // In a real app, you'd save this to a database
-    // For now, we are just storing in local storage for profile page to access
     
     router.push('/memberships');
   };
