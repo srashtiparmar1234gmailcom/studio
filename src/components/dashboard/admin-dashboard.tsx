@@ -18,6 +18,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -32,35 +42,52 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
-import { getAllUsers, userMemberships, membershipPlans, attendance as initialAttendance, addAttendance } from '@/lib/data';
+import { getAllUsers, getAllMemberships, membershipPlans, addAttendance, assignMembership } from '@/lib/data';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { useEffect, useState } from 'react';
-import type { User, Attendance } from '@/lib/types';
+import type { User, Attendance, UserMembership } from '@/lib/types';
+import { Label } from '../ui/label';
 
 export default function AdminDashboard() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [userMemberships, setUserMemberships] = useState<UserMembership[]>([]);
+  
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string>('');
+  const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
+
   const { toast } = useToast();
 
-  useEffect(() => {
+  const loadData = () => {
     setAllUsers(getAllUsers());
     const storedAttendance = localStorage.getItem('attendance');
     if (storedAttendance) {
-      // Dates are stored as strings, need to convert them back to Date objects
       setAttendance(JSON.parse(storedAttendance).map((a: any) => ({...a, date: new Date(a.date)})));
     } else {
-      setAttendance(initialAttendance);
+      setAttendance([]);
     }
+    setUserMemberships(getAllMemberships());
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const handleMarkAttendance = (userId: string, userName: string) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to the beginning of the day
+    today.setHours(0, 0, 0, 0); 
 
-    // Prevent marking attendance twice on the same day for the same user
     const hasAttendedToday = attendance.some(
       a => a.userId === userId && new Date(a.date).toDateString() === today.toDateString()
     );
@@ -74,14 +101,42 @@ export default function AdminDashboard() {
       return;
     }
     
-    const newAttendanceRecord = addAttendance(userId);
-    setAttendance(prev => [...prev, newAttendanceRecord]);
+    addAttendance(userId);
+    loadData(); // Reload all data to reflect changes
     
     toast({
       title: 'Attendance Marked',
       description: `${userName} has been marked as present for today.`,
     });
   };
+
+  const handleOpenEditMembership = (user: User) => {
+    setEditingUser(user);
+    const currentMembership = userMemberships.find(m => m.userId === user.id);
+    setSelectedPlan(currentMembership?.planId || '');
+    setIsMemberDialogOpen(true);
+  };
+  
+  const handleAssignMembership = () => {
+    if (editingUser && selectedPlan) {
+      assignMembership(editingUser.id, selectedPlan);
+      toast({
+        title: 'Membership Assigned',
+        description: `${editingUser.name} has been assigned the ${membershipPlans.find(p => p.id === selectedPlan)?.name} plan.`,
+      });
+      setIsMemberDialogOpen(false);
+      setEditingUser(null);
+      setSelectedPlan('');
+      loadData(); // Reload all data to reflect changes
+    } else {
+       toast({
+        variant: 'destructive',
+        title: 'Assignment Failed',
+        description: `Please select a plan.`,
+      });
+    }
+  };
+
 
   const activeMemberships = userMemberships.filter(m => (m.totalDays - m.daysUsed) > 0).length;
   const todaysAttendance = attendance.filter(a => a.date.toDateString() === new Date().toDateString()).length;
@@ -176,7 +231,7 @@ export default function AdminDashboard() {
                   const membership = userMemberships.find(m => m.userId === user.id);
                   const plan = membership ? membershipPlans.find(p => p.id === membership.planId) : null;
                   const remainingDays = membership ? membership.totalDays - membership.daysUsed : 0;
-                  const status = remainingDays > 0 ? 'Active' : 'Expired';
+                  const status = membership ? (remainingDays > 0 ? 'Active' : 'Expired') : 'No Plan';
 
                   return (
                     <TableRow key={user.id}>
@@ -191,7 +246,7 @@ export default function AdminDashboard() {
                       </TableCell>
                       <TableCell>{plan ? plan.name : 'N/A'}</TableCell>
                       <TableCell>
-                        <Badge variant={status === 'Active' ? 'default' : 'destructive'} className={status === 'Active' ? 'bg-green-600/80 text-white' : ''}>
+                        <Badge variant={status === 'Active' ? 'default' : status === 'Expired' ? 'destructive' : 'secondary'} className={status === 'Active' ? 'bg-green-600/80 text-white' : ''}>
                           {status}
                         </Badge>
                       </TableCell>
@@ -207,7 +262,7 @@ export default function AdminDashboard() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleMarkAttendance(user.id, user.name)}>Mark Attendance</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Membership</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleOpenEditMembership(user)}>Edit Membership</DropdownMenuItem>
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -249,6 +304,39 @@ export default function AdminDashboard() {
             </Card>
         </div>
       </div>
+      <Dialog open={isMemberDialogOpen} onOpenChange={setIsMemberDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Membership for {editingUser?.name}</DialogTitle>
+            <DialogDescription>
+              Select a new membership plan to assign to the user. This will replace any existing plan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="plan" className="text-right">
+                Plan
+              </Label>
+              <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                <SelectTrigger id="plan" className="col-span-3">
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {membershipPlans.map(plan => (
+                    <SelectItem key={plan.id} value={plan.id}>{plan.name} - ₹{plan.price}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleAssignMembership}>Assign Plan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

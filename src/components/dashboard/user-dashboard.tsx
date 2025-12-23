@@ -9,17 +9,38 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getMockUser, userMemberships, membershipPlans, attendance } from '@/lib/data';
+import { getMockUser, getAllMemberships, membershipPlans, attendance as initialAttendance } from '@/lib/data';
 import { AttendanceCalendar } from './attendance-calendar';
 import { Button } from '../ui/button';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import type { User, UserMembership, Attendance } from '@/lib/types';
+
 
 export default function UserDashboard() {
-  const user = getMockUser('customer');
-  const userMembership = userMemberships.find(m => m.userId === user.id);
-  const plan = userMembership ? membershipPlans.find(p => p.id === userMembership.planId) : null;
-  const userAttendance = attendance.filter(a => a.userId === user.id).map(a => a.date);
+  const [user, setUser] = useState<User | null>(null);
+  const [userMembership, setUserMembership] = useState<UserMembership | null>(null);
+  const [userAttendance, setUserAttendance] = useState<Date[]>([]);
+  
+  useEffect(() => {
+    const currentUser = getMockUser('customer');
+    setUser(currentUser);
 
+    const allMemberships = getAllMemberships();
+    const currentUserMembership = allMemberships.find(m => m.userId === currentUser.id) || null;
+    setUserMembership(currentUserMembership);
+
+    const storedAttendance = localStorage.getItem('attendance');
+    const allAttendance: Attendance[] = storedAttendance ? JSON.parse(storedAttendance).map((a:any) => ({...a, date: new Date(a.date)})) : initialAttendance;
+    const currentUserAttendance = allAttendance.filter(a => a.userId === currentUser.id).map(a => a.date);
+    setUserAttendance(currentUserAttendance);
+  }, []);
+
+  if (!user) {
+    return null; // or loading spinner
+  }
+
+  const plan = userMembership ? membershipPlans.find(p => p.id === userMembership.planId) : null;
   const remainingDays = userMembership ? userMembership.totalDays - userMembership.daysUsed : 0;
   const progressValue = userMembership ? (userMembership.daysUsed / userMembership.totalDays) * 100 : 0;
 

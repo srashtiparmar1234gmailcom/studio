@@ -77,7 +77,7 @@ export const addAttendance = (userId: string): Attendance => {
     let currentAttendance: Attendance[] = [];
     if (storedAttendance) {
       try {
-        currentAttendance = JSON.parse(storedAttendance);
+        currentAttendance = JSON.parse(storedAttendance).map((a: any) => ({...a, date: new Date(a.date)}));
       } catch (e) {
         currentAttendance = [];
       }
@@ -90,4 +90,60 @@ export const addAttendance = (userId: string): Attendance => {
   }
 
   return newAttendance;
+};
+
+
+// Helper to get all memberships, including those from localStorage
+export const getAllMemberships = (): UserMembership[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+  const storedMemberships = localStorage.getItem('userMemberships');
+  if (storedMemberships) {
+    try {
+      const parsedMemberships = JSON.parse(storedMemberships).map((m: any) => ({
+        ...m,
+        startDate: new Date(m.startDate),
+      }));
+      if (Array.isArray(parsedMemberships)) {
+        return parsedMemberships;
+      }
+    } catch (e) {
+      // If parsing fails, return empty array
+    }
+  }
+  return [];
+};
+
+
+// Function to assign/update a membership and save to localStorage
+export const assignMembership = (userId: string, planId: string): UserMembership => {
+  const plan = membershipPlans.find(p => p.id === planId);
+  if (!plan) {
+    throw new Error('Plan not found');
+  }
+
+  const newMembership: UserMembership = {
+    id: `mem_${new Date().getTime()}`,
+    userId,
+    planId,
+    startDate: new Date(),
+    totalDays: plan.validityDays,
+    daysUsed: 0,
+  };
+
+  if (typeof window !== 'undefined') {
+    let currentMemberships = getAllMemberships();
+    
+    // Remove existing membership for the user, if any
+    currentMemberships = currentMemberships.filter(m => m.userId !== userId);
+    
+    const updatedMemberships = [...currentMemberships, newMembership];
+    localStorage.setItem('userMemberships', JSON.stringify(updatedMemberships));
+    userMemberships = updatedMemberships;
+  } else {
+    userMemberships.push(newMembership);
+  }
+
+  return newMembership;
 };

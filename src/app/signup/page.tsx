@@ -13,20 +13,47 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAllUsers } from '@/lib/data';
+import { getAllUsers, assignMembership, membershipPlans } from '@/lib/data';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<string>('');
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Get current users from localStorage or initial data
+    if (!selectedPlan) {
+      toast({
+        variant: "destructive",
+        title: "No Plan Selected",
+        description: "Please select a membership plan to continue.",
+      });
+      return;
+    }
+
     const allUsers = getAllUsers();
+
+    if (allUsers.some(u => u.email === email)) {
+      toast({
+        variant: "destructive",
+        title: "User Exists",
+        description: "An account with this email already exists.",
+      });
+      return;
+    }
 
     const newUser = {
       id: `usr_${new Date().getTime()}`,
@@ -38,15 +65,20 @@ export default function SignupPage() {
       avatarUrl: `https://picsum.photos/seed/${email}/40/40`
     };
 
-    // Add new user and save back to localStorage
     const updatedUsers = [...allUsers, newUser];
     localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    // Set session info for the new user
+    assignMembership(newUser.id, selectedPlan);
+    
     localStorage.setItem('userRole', 'customer');
     localStorage.setItem('loggedInUser', email);
     localStorage.setItem('userDetails', JSON.stringify(newUser));
     
+    toast({
+      title: "Account Created",
+      description: "Your account has been created successfully.",
+    });
+
     router.push('/memberships');
   };
 
@@ -83,6 +115,19 @@ export default function SignupPage() {
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            </div>
+             <div className="grid gap-2">
+              <Label htmlFor="plan">Membership Plan</Label>
+               <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                <SelectTrigger id="plan">
+                  <SelectValue placeholder="Select a plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {membershipPlans.map(plan => (
+                    <SelectItem key={plan.id} value={plan.id}>{plan.name} - ₹{plan.price}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button type="submit" className="w-full bg-accent hover:bg-accent/90">
               Create an account
